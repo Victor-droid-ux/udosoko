@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin Dashboard — UDUSOK PG Portal</title>
+<link rel="shortcut icon" href="images/udus-logo.svg"/>
+<link href="css/bootstrap.min.css" rel="stylesheet"/>
+<link href="css/style.css" rel="stylesheet"/>
+<style>
+body { background: #f0f2f5; font-family: Arial, sans-serif; }
+.admin-nav { background: #142d57; color: white; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 56px; }
+.admin-nav h3 { margin: 0; font-size: 16px; }
+.btn-logout { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; }
+.stat-card .num { font-size: 32px; font-weight: 700; color: #1a3a6b; }
+.stat-card .lbl { font-size: 12px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.stat-card.green .num { color: #28a745; }
+.stat-card.orange .num { color: #fd7e14; }
+.stat-card.red .num { color: #dc3545; }
+.stat-card.purple .num { color: #6f42c1; }
+.panel { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 24px; }
+.panel-head { padding: 16px 20px; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
+.panel-head h4 { margin: 0; font-size: 15px; color: #1a3a6b; }
+.panel-body { padding: 0; }
+.filter-bar { padding: 14px 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { border: 1.5px solid #ddd; border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+.btn-search { background: #1a3a6b; color: white; border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: #f8f9fa; }
+th { padding: 12px 14px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e9ecef; }
+td { padding: 11px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+tr:hover td { background: #f8f9fa; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.badge.incomplete { background: #fff3cd; color: #856404; }
+.badge.submitted  { background: #d1ecf1; color: #0c5460; }
+.badge.admitted   { background: #d4edda; color: #155724; }
+.badge.rejected   { background: #f8d7da; color: #721c24; }
+.badge.under_review { background: #e2d9f3; color: #4a2680; }
+.badge.awaiting_payment { background: #fdecea; color: #c8331a; }
+.badge.paid   { background: #d4edda; color: #155724; }
+.badge.pending { background: #fff3cd; color: #856404; }
+.btn-sm { padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; border: none; font-weight: 600; }
+.btn-view { background: #1a3a6b; color: white; }
+.btn-admit { background: #28a745; color: white; }
+.btn-reject { background: #dc3545; color: white; }
+.btn-review { background: #6f42c1; color: white; }
+.pagination { padding: 14px 20px; display: flex; gap: 8px; align-items: center; }
+.pg-btn { border: 1.5px solid #ddd; background: white; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.pg-btn.active { background: #1a3a6b; color: white; border-color: #1a3a6b; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: white; border-radius: 10px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
+.modal-head { padding: 18px 24px; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; }
+.modal-head h4 { margin: 0; color: #1a3a6b; }
+.modal-close { font-size: 20px; cursor: pointer; color: #888; }
+.modal-body { padding: 24px; }
+.info-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.info-row .lbl { color: #666; }
+.info-row .val { font-weight: 600; max-width: 60%; text-align: right; }
+.status-select { width: 100%; padding: 9px; border: 1.5px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 10px; }
+.remarks-input { width: 100%; padding: 9px; border: 1.5px solid #ddd; border-radius: 6px; font-size: 13px; min-height: 80px; margin-bottom: 12px; }
+.btn-update { background: #1a3a6b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="admin-nav">
+  <h3>🎓 UDUSOK PG Admin Dashboard</h3>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span style="font-size:13px;opacity:0.8" id="adminName"></span>
+    <button class="btn-logout" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="num" id="statTotal">—</div><div class="lbl">Total Applications</div></div>
+    <div class="stat-card green"><div class="num" id="statAdmitted">—</div><div class="lbl">Admitted</div></div>
+    <div class="stat-card orange"><div class="num" id="statSubmitted">—</div><div class="lbl">Submitted</div></div>
+    <div class="stat-card purple"><div class="num" id="statPaid">—</div><div class="lbl">Paid</div></div>
+    <div class="stat-card red"><div class="num" id="statRejected">—</div><div class="lbl">Rejected</div></div>
+    <div class="stat-card"><div class="num" id="statIncomplete">—</div><div class="lbl">Incomplete</div></div>
+    <div class="stat-card green" style="grid-column:span 2"><div class="num" id="statRevenue">—</div><div class="lbl">Total Revenue (₦)</div></div>
+  </div>
+
+  <!-- Applications Table -->
+  <div class="panel">
+    <div class="panel-head">
+      <h4>All Applications</h4>
+      <button class="btn-search" onclick="loadApplications()">🔄 Refresh</button>
+    </div>
+    <div class="filter-bar">
+      <select id="filterStatus" onchange="loadApplications()">
+        <option value="">All Statuses</option>
+        <option value="incomplete">Incomplete</option>
+        <option value="awaiting_payment">Awaiting Payment</option>
+        <option value="submitted">Submitted</option>
+        <option value="under_review">Under Review</option>
+        <option value="admitted">Admitted</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <select id="filterDegree" onchange="loadApplications()">
+        <option value="">All Degrees</option>
+        <option value="PhD">PhD</option>
+        <option value="MPhil">MPhil</option>
+        <option value="Masters">Masters</option>
+        <option value="PGDiploma">PG Diploma</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="Search name, email, app no..." style="flex:1;min-width:200px"/>
+      <button class="btn-search" onclick="loadApplications()">Search</button>
+    </div>
+    <div class="panel-body">
+      <table>
+        <thead>
+          <tr>
+            <th>App. Number</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Programme</th>
+            <th>Degree</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="appTable">
+          <tr><td colspan="8" style="text-align:center;padding:24px;color:#888">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- Application Detail Modal -->
+<div class="modal-overlay" id="appModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h4 id="modalTitle">Application Details</h4>
+      <span class="modal-close" onclick="closeModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <div id="modalContent"></div>
+      <hr style="margin:20px 0"/>
+      <h5 style="color:#1a3a6b;margin-bottom:12px">Update Status</h5>
+      <select id="newStatus" class="status-select">
+        <option value="incomplete">Incomplete</option>
+        <option value="awaiting_payment">Awaiting Payment</option>
+        <option value="submitted">Submitted</option>
+        <option value="under_review">Under Review</option>
+        <option value="admitted">Admitted</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <textarea id="remarks" class="remarks-input" placeholder="Admin remarks (optional)..."></textarea>
+      <button class="btn-update" onclick="updateStatus()">Update Status</button>
+      <span id="updateMsg" style="font-size:13px;margin-left:12px;color:#28a745"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+var API        = '/api';
+var adminToken = localStorage.getItem('admin_token');
+var adminUser  = JSON.parse(localStorage.getItem('admin_user') || 'null');
+var currentId  = null;
+var currentPage = 1;
+
+if (!adminToken || !adminUser) window.location.href = '/admin/login';
+document.getElementById('adminName').textContent = adminUser ? adminUser.name : '';
+
+function authHeader() {
+  return { Authorization: 'Bearer ' + adminToken, 'Content-Type': 'application/json' };
+}
+
+// ── Load Stats ────────────────────────────────────────────────────────────────
+function loadStats() {
+  fetch(API + '/admin/stats', { headers: authHeader() })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.success) return;
+    var s = d.stats;
+    document.getElementById('statTotal').textContent     = s.total;
+    document.getElementById('statAdmitted').textContent  = s.admitted;
+    document.getElementById('statSubmitted').textContent = s.submitted;
+    document.getElementById('statPaid').textContent      = s.paid;
+    document.getElementById('statRejected').textContent  = s.rejected;
+    document.getElementById('statIncomplete').textContent = s.incomplete;
+    document.getElementById('statRevenue').textContent   = '₦' + (s.revenue || 0).toLocaleString();
+  });
+}
+
+// ── Load Applications ─────────────────────────────────────────────────────────
+function loadApplications(page) {
+  currentPage = page || 1;
+  var status  = document.getElementById('filterStatus').value;
+  var degree  = document.getElementById('filterDegree').value;
+  var search  = document.getElementById('searchInput').value.trim();
+  var params  = new URLSearchParams({ page: currentPage, limit: 20 });
+  if (status) params.set('status', status);
+  if (degree) params.set('degreeType', degree);
+  if (search) params.set('search', search);
+
+  document.getElementById('appTable').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#888">Loading...</td></tr>';
+
+  fetch(API + '/admin/applications?' + params, { headers: authHeader() })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.success) { document.getElementById('appTable').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#c8331a">Failed to load.</td></tr>'; return; }
+
+    if (!d.students.length) {
+      document.getElementById('appTable').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#888">No applications found.</td></tr>';
+      return;
+    }
+
+    document.getElementById('appTable').innerHTML = d.students.map(function(s) {
+      return '<tr>' +
+        '<td style="font-size:11px;font-family:monospace">' + (s.applicationNumber || '—') + '</td>' +
+        '<td><strong>' + s.firstName + ' ' + s.lastName + '</strong></td>' +
+        '<td style="font-size:12px;color:#666">' + s.email + '</td>' +
+        '<td style="font-size:12px">' + (s.programme || '—') + '</td>' +
+        '<td><span class="badge ' + (s.degreeType||'').toLowerCase() + '" style="background:#e8f0ff;color:#1a3a6b">' + (s.degreeType || '—') + '</span></td>' +
+        '<td><span class="badge ' + s.paymentStatus + '">' + s.paymentStatus + '</span></td>' +
+        '<td><span class="badge ' + s.applicationStatus + '">' + (s.applicationStatus||'').replace(/_/g,' ') + '</span></td>' +
+        '<td style="display:flex;gap:4px;flex-wrap:wrap">' +
+          '<button class="btn-sm btn-view" onclick="viewApp(\'' + s._id + '\')">View</button>' +
+          (s.applicationStatus === 'submitted' || s.applicationStatus === 'under_review' ?
+            '<button class="btn-sm btn-admit" onclick="quickUpdate(\'' + s._id + '\', \'admitted\')">Admit</button>' +
+            '<button class="btn-sm btn-reject" onclick="quickUpdate(\'' + s._id + '\', \'rejected\')">Reject</button>' : '') +
+          (s.applicationStatus === 'submitted' ?
+            '<button class="btn-sm btn-review" onclick="quickUpdate(\'' + s._id + '\', \'under_review\')">Review</button>' : '') +
+        '</td>' +
+        '</tr>';
+    }).join('');
+
+    // Pagination
+    var pg = d.pagination;
+    var html = '';
+    for (var i = 1; i <= pg.pages; i++) {
+      html += '<button class="pg-btn' + (i === pg.page ? ' active' : '') + '" onclick="loadApplications(' + i + ')">' + i + '</button>';
+    }
+    document.getElementById('pagination').innerHTML = html + ' <span style="font-size:13px;color:#888;margin-left:8px">' + pg.total + ' total</span>';
+  })
+  .catch(() => {
+    document.getElementById('appTable').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#c8331a">Connection error.</td></tr>';
+  });
+}
+
+// ── View Application ──────────────────────────────────────────────────────────
+function viewApp(id) {
+  currentId = id;
+  fetch(API + '/admin/applications/' + id, { headers: authHeader() })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.success) return;
+    var s = d.student;
+    document.getElementById('modalTitle').textContent = (s.firstName + ' ' + s.lastName + ' — ' + (s.applicationNumber || ''));
+    document.getElementById('newStatus').value = s.applicationStatus || 'incomplete';
+    document.getElementById('remarks').value   = s.adminRemarks || '';
+
+    var qual = (s.qualifications || []).map(function(q) {
+      return q.degree + ' — ' + q.institution + ' (' + q.graduationYear + ')';
+    }).join('<br>') || '—';
+
+    document.getElementById('modalContent').innerHTML = [
+      ['Application No.', s.applicationNumber || '—'],
+      ['Full Name', s.firstName + ' ' + (s.middleName || '') + ' ' + s.lastName],
+      ['Email', s.email],
+      ['Phone', s.phone || '—'],
+      ['Gender', s.gender || '—'],
+      ['Date of Birth', s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString() : '—'],
+      ['State of Origin', s.stateOfOrigin || '—'],
+      ['LGA', s.lga || '—'],
+      ['Address', s.address || '—'],
+      ['Programme', s.programme || '—'],
+      ['Degree Type', s.degreeType || '—'],
+      ['Faculty', s.faculty || '—'],
+      ['Department', s.department || '—'],
+      ['Session', s.session || '2026/2027'],
+      ['Qualifications', qual],
+      ['Payment Status', s.paymentStatus],
+      ['Payment Ref', s.paymentRef || '—'],
+      ['Payment Amount', s.paymentAmount ? '₦' + s.paymentAmount.toLocaleString() : '—'],
+      ['Application Status', (s.applicationStatus || '').replace(/_/g, ' ').toUpperCase()],
+      ['Admin Remarks', s.adminRemarks || '—'],
+      ['Date Applied', new Date(s.createdAt).toLocaleString()],
+    ].map(function(row) {
+      return '<div class="info-row"><span class="lbl">' + row[0] + '</span><span class="val">' + row[1] + '</span></div>';
+    }).join('');
+
+    document.getElementById('appModal').classList.add('open');
+    document.getElementById('updateMsg').textContent = '';
+  });
+}
+
+function closeModal() {
+  document.getElementById('appModal').classList.remove('open');
+  currentId = null;
+}
+
+// ── Update Status ─────────────────────────────────────────────────────────────
+function updateStatus() {
+  if (!currentId) return;
+  var status  = document.getElementById('newStatus').value;
+  var remarks = document.getElementById('remarks').value.trim();
+  fetch(API + '/admin/applications/' + currentId + '/status', {
+    method: 'PUT',
+    headers: authHeader(),
+    body: JSON.stringify({ status, adminRemarks: remarks }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      document.getElementById('updateMsg').textContent = '✅ Updated!';
+      loadStats(); loadApplications(currentPage);
+      setTimeout(closeModal, 1200);
+    } else {
+      document.getElementById('updateMsg').textContent = '❌ ' + (d.message || 'Failed');
+      document.getElementById('updateMsg').style.color = '#c8331a';
+    }
+  });
+}
+
+function quickUpdate(id, status) {
+  if (!confirm('Set status to "' + status + '" for this applicant?')) return;
+  fetch(API + '/admin/applications/' + id + '/status', {
+    method: 'PUT',
+    headers: authHeader(),
+    body: JSON.stringify({ status }),
+  })
+  .then(r => r.json())
+  .then(d => { if (d.success) { loadStats(); loadApplications(currentPage); } });
+}
+
+function doLogout() {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  window.location.href = '/admin/login';
+}
+
+document.getElementById('appModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+document.getElementById('searchInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') loadApplications(); });
+
+loadStats();
+loadApplications();
+</script>
+</body>
+</html>

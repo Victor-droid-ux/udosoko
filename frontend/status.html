@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Check Status — UDUSOK PG Portal</title>
+<link rel="shortcut icon" href="images/udus-logo.svg"/>
+<link href="css/bootstrap.min.css" rel="stylesheet"/>
+<link href="css/style.css" rel="stylesheet"/>
+<style>
+body { background: #f4f4f4; }
+.wrap { max-width: 540px; margin: 60px auto; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+.hdr { background: #1a3a6b; color: white; padding: 28px; text-align: center; }
+.hdr h2 { margin: 0; font-size: 20px; }
+.hdr p { margin: 6px 0 0; font-size: 13px; opacity: 0.8; }
+.body { padding: 32px; }
+.form-group label { font-weight: 600; font-size: 13px; color: #333; }
+.form-control { border-radius: 6px; border: 1.5px solid #ddd; padding: 10px 14px; font-size: 14px; width: 100%; margin-bottom: 14px; }
+.form-control:focus { border-color: #1a3a6b; outline: none; }
+.btn-check { width: 100%; background: #1a3a6b; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn-check:hover { background: #142d57; }
+.msg { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 13px; display: none; }
+.msg.error { background: #fdecea; color: #c8331a; display: block; }
+.result { display: none; margin-top: 20px; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
+.result-header { padding: 16px 20px; font-weight: 700; color: white; }
+.result-header.admitted   { background: #28a745; }
+.result-header.rejected   { background: #dc3545; }
+.result-header.submitted  { background: #17a2b8; }
+.result-header.under_review { background: #6f42c1; }
+.result-header.incomplete { background: #ffc107; color: #333; }
+.result-header.awaiting_payment { background: #fd7e14; }
+.result-body { padding: 20px; }
+.info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.info-row .lbl { color: #666; }
+.info-row .val { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/"><img src="images/udus-logo.svg"/></a> Usmanu Danfodiyo University Sokoto (College of Postgraduate Studies)
+</div>
+
+<div class="wrap">
+  <div class="hdr">
+    <h2>Check Application Status</h2>
+    <p>Enter your application number and email to check your status</p>
+  </div>
+  <div class="body">
+    <div id="msg" class="msg"></div>
+    <div class="form-group">
+      <label>Application Number</label>
+      <input type="text" id="appNum" class="form-control" placeholder="e.g. UDUSOK/PG/2026/123456"/>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" class="form-control" placeholder="Email used during registration"/>
+    </div>
+    <button class="btn-check" onclick="checkStatus()">Check Status</button>
+
+    <div id="result" class="result">
+      <div id="resultHeader" class="result-header">Application Status</div>
+      <div class="result-body">
+        <div class="info-row"><span class="lbl">Full Name</span><span class="val" id="rName"></span></div>
+        <div class="info-row"><span class="lbl">Application Number</span><span class="val" id="rAppNum"></span></div>
+        <div class="info-row"><span class="lbl">Programme</span><span class="val" id="rProg"></span></div>
+        <div class="info-row"><span class="lbl">Degree Type</span><span class="val" id="rDegree"></span></div>
+        <div class="info-row"><span class="lbl">Session</span><span class="val" id="rSession"></span></div>
+        <div class="info-row"><span class="lbl">Payment Status</span><span class="val" id="rPayment"></span></div>
+        <div class="info-row"><span class="lbl">Application Status</span><span class="val" id="rStatus"></span></div>
+        <div class="info-row"><span class="lbl">Date Applied</span><span class="val" id="rDate"></span></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;font-size:13px">
+      <a href="/login" style="color:#1a3a6b">Login to your portal</a> &nbsp;|&nbsp;
+      <a href="/register" style="color:#1a3a6b">Create an account</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Copyright &copy; 2026 All rights reserved - UDUS</div>
+
+<script>
+function checkStatus() {
+  var appNum = document.getElementById('appNum').value.trim();
+  var email  = document.getElementById('email').value.trim();
+  var msg    = document.getElementById('msg');
+
+  if (!appNum || !email) {
+    msg.textContent = 'Please enter your application number and email.';
+    msg.className = 'msg error'; return;
+  }
+  msg.style.display = 'none';
+
+  fetch('/api/application/check-status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ applicationNumber: appNum, email: email }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.success) {
+      msg.textContent = d.message || 'No application found.';
+      msg.className = 'msg error';
+      document.getElementById('result').style.display = 'none';
+      return;
+    }
+    var a = d.application;
+    document.getElementById('rName').textContent    = a.firstName + ' ' + a.lastName;
+    document.getElementById('rAppNum').textContent  = a.applicationNumber;
+    document.getElementById('rProg').textContent    = a.programme || '—';
+    document.getElementById('rDegree').textContent  = a.degreeType || '—';
+    document.getElementById('rSession').textContent = a.session || '2026/2027';
+    document.getElementById('rPayment').textContent = a.paymentStatus === 'paid' ? '✅ Paid' : '❌ Pending';
+    document.getElementById('rStatus').textContent  = (a.applicationStatus || '').replace(/_/g, ' ').toUpperCase();
+    document.getElementById('rDate').textContent    = new Date(a.createdAt).toLocaleDateString();
+
+    var hdr = document.getElementById('resultHeader');
+    var statusLabels = {
+      incomplete: '⚠️ Application Incomplete',
+      awaiting_payment: '💳 Awaiting Payment',
+      submitted: '📋 Application Submitted',
+      under_review: '🔍 Under Review',
+      admitted: '🎉 ADMITTED',
+      rejected: '❌ Not Admitted',
+    };
+    hdr.textContent = statusLabels[a.applicationStatus] || a.applicationStatus;
+    hdr.className = 'result-header ' + (a.applicationStatus || 'incomplete');
+    document.getElementById('result').style.display = 'block';
+  })
+  .catch(() => { msg.textContent = 'Connection error. Try again.'; msg.className = 'msg error'; });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Enter') checkStatus(); });
+</script>
+</body>
+</html>

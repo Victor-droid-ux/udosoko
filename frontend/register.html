@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Register — UDUSOK PG Admission Portal</title>
+<link rel="shortcut icon" href="images/udus-logo.svg"/>
+<link href="css/bootstrap.min.css" rel="stylesheet"/>
+<link href="css/style.css" rel="stylesheet"/>
+<style>
+body { background: #f4f4f4; }
+.reg-wrap { max-width: 560px; margin: 40px auto; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+.reg-header { background: #1a3a6b; color: white; padding: 28px; text-align: center; }
+.reg-header h2 { margin: 0; font-size: 20px; }
+.reg-header p { margin: 6px 0 0; font-size: 13px; opacity: 0.8; }
+.reg-body { padding: 32px; }
+.form-group label { font-weight: 600; font-size: 13px; color: #333; }
+.form-control { border-radius: 6px; border: 1.5px solid #ddd; padding: 10px 14px; font-size: 14px; }
+.form-control:focus { border-color: #1a3a6b; box-shadow: none; }
+.btn-reg { width: 100%; background: #1a3a6b; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn-reg:hover { background: #142d57; }
+.msg { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; display: none; }
+.msg.error { background: #fdecea; color: #c8331a; display: block; }
+.msg.success { background: #e8f7f0; color: #0c8a52; display: block; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/"><img src="images/udus-logo.svg"/></a> Usmanu Danfodiyo University Sokoto (College of Postgraduate Studies)
+</div>
+
+<div class="reg-wrap">
+  <div class="reg-header">
+    <h2>Create Applicant Account</h2>
+    <p>UDUSOK Postgraduate Admission Portal 2026/2027</p>
+  </div>
+  <div class="reg-body">
+    <div id="msg" class="msg"></div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>First Name *</label>
+        <input type="text" id="firstName" class="form-control" placeholder="First name"/>
+      </div>
+      <div class="form-group">
+        <label>Last Name *</label>
+        <input type="text" id="lastName" class="form-control" placeholder="Last name"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Middle Name</label>
+      <input type="text" id="middleName" class="form-control" placeholder="Middle name (optional)"/>
+    </div>
+    <div class="form-group">
+      <label>Email Address *</label>
+      <input type="email" id="email" class="form-control" placeholder="Enter a valid email address"/>
+    </div>
+    <div class="form-group">
+      <label>Phone Number *</label>
+      <input type="tel" id="phone" class="form-control" placeholder="e.g. 08012345678"/>
+    </div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" id="password" class="form-control" placeholder="Min. 6 characters"/>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password *</label>
+        <input type="password" id="confirmPassword" class="form-control" placeholder="Repeat password"/>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:8px">
+      <label><input type="checkbox" id="agree" style="margin-right:6px"/>
+      I agree to the terms and conditions of UDUSOK PG Admission</label>
+    </div>
+    <button class="btn-reg" id="regBtn" onclick="doRegister()">Create Account</button>
+    <div style="text-align:center;margin-top:16px;font-size:13px">
+      Already have an account? <a href="/login" style="color:#1a3a6b;font-weight:600">Login</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Copyright &copy; 2026 All rights reserved - UDUS</div>
+
+<script>
+var API = '/api';
+function showMsg(msg, type) {
+  var el = document.getElementById('msg');
+  el.textContent = msg; el.className = 'msg ' + type;
+}
+function doRegister() {
+  var firstName       = document.getElementById('firstName').value.trim();
+  var lastName        = document.getElementById('lastName').value.trim();
+  var middleName      = document.getElementById('middleName').value.trim();
+  var email           = document.getElementById('email').value.trim();
+  var phone           = document.getElementById('phone').value.trim();
+  var password        = document.getElementById('password').value;
+  var confirmPassword = document.getElementById('confirmPassword').value;
+  var agree           = document.getElementById('agree').checked;
+  var btn             = document.getElementById('regBtn');
+
+  if (!firstName || !lastName || !email || !password || !phone) {
+    return showMsg('Please fill in all required fields.', 'error');
+  }
+  if (password.length < 6) return showMsg('Password must be at least 6 characters.', 'error');
+  if (password !== confirmPassword) return showMsg('Passwords do not match.', 'error');
+  if (!agree) return showMsg('You must agree to the terms and conditions.', 'error');
+
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  fetch(API + '/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ firstName, lastName, middleName, email, password, phone }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false; btn.textContent = 'Create Account';
+    if (d.success) {
+      localStorage.setItem('pg_token', d.token);
+      localStorage.setItem('pg_student', JSON.stringify(d.student));
+      showMsg('Account created successfully! Redirecting to your dashboard...', 'success');
+      setTimeout(() => window.location.href = '/dashboard', 1200);
+    } else {
+      showMsg(d.message || 'Registration failed.', 'error');
+    }
+  })
+  .catch(() => { btn.disabled = false; btn.textContent = 'Create Account'; showMsg('Connection error. Try again.', 'error'); });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Login — UDUSOK PG Admission Portal</title>
+<link rel="shortcut icon" href="images/udus-logo.svg"/>
+<link href="css/bootstrap.min.css" rel="stylesheet"/>
+<link href="css/style.css" rel="stylesheet"/>
+<style>
+body { background: #f4f4f4; }
+.login-wrap { max-width: 440px; margin: 60px auto; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+.login-header { background: #1a3a6b; color: white; padding: 28px; text-align: center; }
+.login-header h2 { margin: 0; font-size: 20px; }
+.login-header p { margin: 6px 0 0; font-size: 13px; opacity: 0.8; }
+.login-body { padding: 32px; }
+.form-group label { font-weight: 600; font-size: 13px; color: #333; }
+.form-control { border-radius: 6px; border: 1.5px solid #ddd; padding: 10px 14px; font-size: 14px; }
+.form-control:focus { border-color: #1a3a6b; box-shadow: none; }
+.btn-login { width: 100%; background: #1a3a6b; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.btn-login:hover { background: #142d57; }
+.msg { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; display: none; }
+.msg.error { background: #fdecea; color: #c8331a; display: block; }
+.msg.success { background: #e8f7f0; color: #0c8a52; display: block; }
+.links { text-align: center; margin-top: 16px; font-size: 13px; }
+.links a { color: #1a3a6b; }
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/"><img src="images/udus-logo.svg"/></a> Usmanu Danfodiyo University Sokoto (College of Postgraduate Studies)
+</div>
+
+<div class="login-wrap">
+  <div class="login-header">
+    <h2>Applicant Login</h2>
+    <p>UDUSOK Postgraduate Admission Portal 2026/2027</p>
+  </div>
+  <div class="login-body">
+    <div id="msg" class="msg"></div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" class="form-control" placeholder="Enter your email"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" class="form-control" placeholder="Enter your password"/>
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+    <div class="links">
+      <a href="/forgot-password">Forgot Password?</a> &nbsp;|&nbsp;
+      Don't have an account? <a href="/register">Register</a>
+    </div>
+    <div class="links" style="margin-top:8px">
+      <a href="/status">Check Application Status</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Copyright &copy; 2026 All rights reserved - UDUS</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+var API = '/api';
+function showMsg(msg, type) {
+  var el = document.getElementById('msg');
+  el.textContent = msg;
+  el.className = 'msg ' + type;
+}
+function doLogin() {
+  var email    = document.getElementById('email').value.trim();
+  var password = document.getElementById('password').value;
+  var btn      = document.getElementById('loginBtn');
+  if (!email || !password) { showMsg('Please enter your email and password.', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Logging in...';
+  fetch(API + '/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false; btn.textContent = 'Login';
+    if (d.success) {
+      localStorage.setItem('pg_token', d.token);
+      localStorage.setItem('pg_student', JSON.stringify(d.student));
+      showMsg('Login successful! Redirecting...', 'success');
+      setTimeout(() => window.location.href = '/dashboard', 800);
+    } else {
+      showMsg(d.message || 'Login failed.', 'error');
+    }
+  })
+  .catch(() => { btn.disabled = false; btn.textContent = 'Login'; showMsg('Connection error. Try again.', 'error'); });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

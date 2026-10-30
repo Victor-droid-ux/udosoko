@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Outer circle -->
+  <circle cx="100" cy="100" r="95" fill="#1a3a6b" stroke="#c8a830" stroke-width="6"/>
+  <!-- Inner circle -->
+  <circle cx="100" cy="100" r="80" fill="none" stroke="#c8a830" stroke-width="2"/>
+  <!-- Star/crest shape -->
+  <polygon points="100,30 108,58 136,58 114,74 122,102 100,86 78,102 86,74 64,58 92,58" fill="#c8a830"/>
+  <!-- Open book -->
+  <rect x="70" y="108" width="28" height="20" rx="2" fill="white" transform="rotate(-5,84,118)"/>
+  <rect x="102" y="108" width="28" height="20" rx="2" fill="white" transform="rotate(5,116,118)"/>
+  <line x1="100" y1="106" x2="100" y2="130" stroke="#1a3a6b" stroke-width="2"/>
+  <!-- Text UDUSOK -->
+  <text x="100" y="158" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#c8a830" text-anchor="middle" letter-spacing="2">UDUSOK</text>
+  <!-- Text bottom -->
+  <text x="100" y="172" font-family="Arial, sans-serif" font-size="7" fill="white" text-anchor="middle" letter-spacing="1">USMANU DANFODIYO UNIVERSITY</text>
+  <text x="100" y="182" font-family="Arial, sans-serif" font-size="7" fill="white" text-anchor="middle" letter-spacing="1">SOKOTO - FOUNDED 1975</text>
+</svg>

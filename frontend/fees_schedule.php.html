@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
+<html xmlns="http://www.w3.org/1999/xhtml" ng-app="myApp">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" href="images/udus-logo.svg" />
+<title>UDUS | College of Postgraduate Studies Admission Portal</title>
+<link href="css/style.css" rel="stylesheet" type="text/css" />
+<link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="css/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+<link href="font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js" type="text/javascript"></script>
+<style type="text/css">
+
+  .affix {
+      top: 0px;
+      width: 100%;	 
+  }
+
+  .affix + .container-fluid {
+      padding-top: 50px;
+	  padding-left: 0px;
+	  padding-right: 0px;
+  }
+   .navbar-default .navbar-nav > li > a {
+    color: #FFF;
+}
+.navbar-default{
+    color: #FFF;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+    color: #FC0;
+}
+
+@media only screen and (max-width: 480px)
+{
+    
+    .navbar-default .navbar-nav > li > a {font-size: 13px; background-color: #333; font-weight: 600; transition: width 0.7s ease-in-out; -webkit-transition: width 0.7s ease-in-out; -moz-transition: width 0.7s ease-in-out;   -o-transition: width 0.7s ease-in-out; }
+  .navbar-default .navbar-nav > li > a:hover {margin: 0; font-size: 13px; background-color: #FFF; width: 100%; text-align:left; border-bottom: 2px solid #FC0; border-top:none; min-height: 15px;}
+  .navbar-default .navbar-nav > li > a:focus { width: auto; }
+}
+</style>
+<script type="text/javascript">
+function logout()
+{
+    window.open("logMeOut.php","_self");
+}
+</script>
+</head>
+
+<body>
+
+  <div class="header">
+<a href="index.html"><img src="images/udus-logo.svg" /></a> Usmanu Danfodiyo University Sokoto (College of Postgraduate Studies) </div>
+</div><nav class="navbar navbar-default navbar-inverse navbar-fixed-top">
+  
+  <div class="container-fluid"> <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button></div>
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+           <ul class="nav navbar-nav navbar-left">
+              <li><a href="index.php.html"><i class="fa fa-home"></i> Home </a></li>
+              <li><a href="admissionRequirements.php.html"><i class="fa fa-folder"></i> Admission Requirements </a></li>
+              <li><a href="availableProgrammes.php.html"><i class="fa fa-list"></i> Available Programmes </a></li>
+			        <li><a href="fees_schedule.php.html"><i class="fa fa-list"></i> Fees Schedule </a></li>
+              <li><a href="fees_schedule.php.html#" id="btn-download" data-toggle="tooltip" data-placement="bottom"  title="Click to download manual registration forms."><i class="fa fa-download"></i> Downloads </a></li>
+              
+              <li class="dropdown"><a href="fees_schedule.php.html#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-book"></i> User Guides <span class="caret"></span> </a>
+                
+                <ul class="dropdown-menu">
+                  <li><a href="PGMANUAL.pdf" target="_blank"> <i class="fa fa-caret-square-o-right fa-align-right"></i> &nbsp; Online Application Guide </a></li>
+                  <li class="divider"></li>
+                  <li><a href="online_application_guide.php.html" target="_blank"> <i class="fa fa-caret-square-o-right fa-align-right"></i> &nbsp; Online Registration Guide </a></li>
+                  <li class="divider"></li>
+                  <li><a href="http://payment.udusok.edu.ng/userPaymentGuide.php" target="_blank"> <i class="fa fa-caret-square-o-right fa-align-right"></i> &nbsp; Online payment Guide </a></li>
+                </ul>
+
+              </li>
+              <li><a href="UDUS_CPGS_ADMISSIONS_2025-2026.pdf"><i class="fa fa-list"></i> 2025/2026 Admission List </a></li>
+              
+		   </ul>
+
+		   <ul class="nav navbar-nav navbar-right"></ul>
+      </div></div></nav>    
+  <table width="1010" height="327" border="0" align="center" class="table_bg">
+        <tr>
+        <td width="889" height="323">
+        
+        
+        <div class="form_content gradient" >
+        
+        <p class="heading"> FEES SCHEDULE FOR 2026/2027 SESSION </p>
+        
+         <p class="subheading">
+         
+          <div ng-controller="myFeeStructure">
+   <table width="90%" class="table-bordered table-condensed table-hover table-responsive table-striped styleTb2" align="center">
+     <tr>
+   <td colspan="7">
+   <form name="myForm" ng-init="">
+   <div class="form-group has-feedback">
+   <input type="text" name="filt" ng-model="feeStructFilters" class="form-control styleTb2" placeholder="Insert Item Name to Filter"  />
+   <i class="glyphicon glyphicon-ok form-control-feedback"></i>
+   </div>
+   </form>
+   
+     Search Parameter: <strong> {{ feeStructFilters }} </strong>
+     </td>
+
+     
+     <tr>
+     <th> </th>
+     <th ng-click="orders('prog')"> Programmes </th>
+     <th ng-click="orders('level')"> Level </th>
+     <th> Amount (=N=) </th>
+     <th ng-click="orders('nationality')"> Nationality </th>
+          
+     </tr>
+     
+     <tr ng-repeat="x in feeStructure | filter : feeStructFilters | orderBy: feeOrders ">
+     <td>  {{ $index + 1 }}</td>
+     <td> {{ x.prog }} </td>
+     <td> {{ x.level }} </td>
+     <td><strong> {{ x.amount }} </strong> </td>
+     <td> {{ x.nationality }} </td>
+    
+     </tr>
+     
+     </table>
+     </div>
+         
+         </p>
+      </div>
+      
+      
+      </td>
+      </tr>
+  </table>
+  
+<div class="footer">
+Copyright &copy; 2026 All rights reserved - UDUS <br/><br/>
+Concept Designed and Developed By: UDUS WEB Team</div>
+</div>
+
+
+<script type="text/javascript">
+//----------- AngularJS for fee structure ----------------//
+var app = angular.module("myApp",[]);
+
+app.controller("myFeeStructure", function($scope, $http){
+
+$http.get("include/json_feeStructures_calls.php").then(function(response){ $scope.feeStructure = response.data.records; });
+$scope.orders = function(x){ $scope.feeOrders = x; }
+
+	
+});
+
+</script>
+
+</body>
+</html>

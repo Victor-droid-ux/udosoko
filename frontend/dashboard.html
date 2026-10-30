@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard — UDUSOK PG Admission Portal</title>
+<link rel="shortcut icon" href="images/udus-logo.svg"/>
+<link href="css/bootstrap.min.css" rel="stylesheet"/>
+<link href="css/style.css" rel="stylesheet"/>
+<style>
+body { background: #f4f4f4; font-family: Arial, sans-serif; }
+.dash-wrap { max-width: 960px; margin: 30px auto; padding: 0 16px; }
+.dash-header { background: #1a3a6b; color: white; padding: 18px 24px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
+.dash-header h3 { margin: 0; font-size: 18px; }
+.btn-logout { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.btn-logout:hover { background: rgba(255,255,255,0.25); }
+.dash-body { background: white; border-radius: 0 0 8px 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.dash-sidebar { background: #f8f9fa; border-right: 1px solid #dee2e6; padding: 0; min-height: 500px; }
+.nav-item { padding: 14px 20px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #e9ecef; display: flex; align-items: center; gap: 10px; color: #333; transition: all 0.2s; }
+.nav-item:hover, .nav-item.active { background: #1a3a6b; color: white; }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.dash-content { padding: 28px; }
+.status-card { border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.status-card.incomplete { background: #fff3cd; border-left: 4px solid #ffc107; }
+.status-card.submitted  { background: #d1ecf1; border-left: 4px solid #17a2b8; }
+.status-card.admitted   { background: #d4edda; border-left: 4px solid #28a745; }
+.status-card.rejected   { background: #f8d7da; border-left: 4px solid #dc3545; }
+.status-card.under_review { background: #e2d9f3; border-left: 4px solid #6f42c1; }
+.status-card.awaiting_payment { background: #fdecea; border-left: 4px solid #c8331a; }
+.app-num { font-size: 22px; font-weight: 700; color: #1a3a6b; letter-spacing: 1px; }
+.section { display: none; }
+.section.active { display: block; }
+.info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.info-row .lbl { color: #666; }
+.info-row .val { font-weight: 600; }
+.btn-action { background: #1a3a6b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.btn-action:hover { background: #142d57; }
+.btn-action.green { background: #28a745; }
+.btn-action.orange { background: #fd7e14; }
+.btn-action.red { background: #dc3545; }
+.form-group label { font-weight: 600; font-size: 13px; color: #333; }
+.form-control { border-radius: 6px; border: 1.5px solid #ddd; padding: 8px 12px; font-size: 14px; width: 100%; margin-bottom: 12px; }
+.form-control:focus { border-color: #1a3a6b; outline: none; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.msg { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 13px; display: none; }
+.msg.error   { background: #fdecea; color: #c8331a; display: block; }
+.msg.success { background: #e8f7f0; color: #0c8a52; display: block; }
+.step-indicator { display: flex; gap: 0; margin-bottom: 28px; }
+.step { flex: 1; text-align: center; padding: 10px; font-size: 12px; font-weight: 600; background: #f0f0f0; color: #666; border-right: 2px solid white; }
+.step.done { background: #28a745; color: white; }
+.step.active { background: #1a3a6b; color: white; }
+.upload-box { border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 12px; }
+.upload-box:hover { border-color: #1a3a6b; }
+.upload-box input { display: none; }
+.badge-status { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.badge-status.incomplete { background: #fff3cd; color: #856404; }
+.badge-status.submitted  { background: #d1ecf1; color: #0c5460; }
+.badge-status.admitted   { background: #d4edda; color: #155724; }
+.badge-status.rejected   { background: #f8d7da; color: #721c24; }
+.badge-status.under_review { background: #e2d9f3; color: #4a2680; }
+.badge-status.awaiting_payment { background: #fdecea; color: #c8331a; }
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/"><img src="images/udus-logo.svg"/></a> Usmanu Danfodiyo University Sokoto (College of Postgraduate Studies)
+</div>
+
+<div class="dash-wrap">
+  <div class="dash-header">
+    <h3>Applicant Dashboard — <span id="studentName">Loading...</span></h3>
+    <button class="btn-logout" onclick="doLogout()">Logout</button>
+  </div>
+  <div class="dash-body">
+    <div style="display:flex">
+      <!-- Sidebar -->
+      <div class="dash-sidebar" style="width:220px;flex-shrink:0">
+        <div class="nav-item active" onclick="showSection('overview', this)"><span class="icon">🏠</span> Overview</div>
+        <div class="nav-item" onclick="showSection('personal', this)"><span class="icon">👤</span> Personal Info</div>
+        <div class="nav-item" onclick="showSection('programme', this)"><span class="icon">🎓</span> Programme Choice</div>
+        <div class="nav-item" onclick="showSection('qualifications', this)"><span class="icon">📜</span> Qualifications</div>
+        <div class="nav-item" onclick="showSection('documents', this)"><span class="icon">📁</span> Documents</div>
+        <div class="nav-item" onclick="showSection('payment', this)"><span class="icon">💳</span> Payment</div>
+        <div class="nav-item" onclick="showSection('submit', this)"><span class="icon">✅</span> Submit Application</div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="dash-content" style="flex:1">
+
+        <!-- OVERVIEW -->
+        <div id="sec-overview" class="section active">
+          <h4 style="color:#1a3a6b;margin-bottom:20px">Application Overview</h4>
+          <div id="statusCard" class="status-card incomplete">
+            <div style="font-size:12px;color:#666;margin-bottom:4px">APPLICATION NUMBER</div>
+            <div class="app-num" id="appNum">Loading...</div>
+            <div style="margin-top:10px;font-size:14px">
+              Status: <span id="appStatus" class="badge-status incomplete">Incomplete</span>
+            </div>
+            <div style="margin-top:6px;font-size:13px;color:#555" id="statusMsg"></div>
+          </div>
+
+          <div class="step-indicator" id="stepIndicator">
+            <div class="step active" id="step1">1. Personal Info</div>
+            <div class="step" id="step2">2. Programme</div>
+            <div class="step" id="step3">3. Qualifications</div>
+            <div class="step" id="step4">4. Documents</div>
+            <div class="step" id="step5">5. Payment</div>
+            <div class="step" id="step6">6. Submit</div>
+          </div>
+
+          <div class="row-2" style="margin-top:16px">
+            <div style="background:#f8f9fa;border-radius:8px;padding:16px">
+              <div style="font-size:12px;color:#666;margin-bottom:4px">SESSION</div>
+              <div style="font-weight:700;color:#1a3a6b" id="ovSession">2026/2027</div>
+            </div>
+            <div style="background:#f8f9fa;border-radius:8px;padding:16px">
+              <div style="font-size:12px;color:#666;margin-bottom:4px">DEGREE TYPE</div>
+              <div style="font-weight:700;color:#1a3a6b" id="ovDegree">—</div>
+            </div>
+            <div style="background:#f8f9fa;border-radius:8px;padding:16px">
+              <div style="font-size:12px;color:#666;margin-bottom:4px">PROGRAMME</div>
+              <div style="font-weight:700;color:#1a3a6b" id="ovProgramme">—</div>
+            </div>
+            <div style="background:#f8f9fa;border-radius:8px;padding:16px">
+              <div style="font-size:12px;color:#666;margin-bottom:4px">PAYMENT STATUS</div>
+              <div style="font-weight:700" id="ovPayment">Pending</div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;padding:14px;background:#e8f0ff;border-radius:8px;font-size:13px;color:#1a3a6b">
+            ℹ️ Complete all sections and pay the application fee of <strong>₦15,000</strong> before submitting your application.
+          </div>
+        </div>
+
+        <!-- PERSONAL INFO -->
+        <div id="sec-personal" class="section">
+          <h4 style="color:#1a3a6b;margin-bottom:20px">Personal Information</h4>
+          <div id="personalMsg" class="msg"></div>
+          <div class="row-2">
+            <div class="form-group"><label>First Name *</label><input type="text" id="pFirstName" class="form-control"/></div>
+            <div class="form-group"><label>Last Name *</label><input type="text" id="pLastName" class="form-control"/></div>
+          </div>
+          <div class="form-group"><label>Middle Name</label><input type="text" id="pMiddleName" class="form-control"/></div>
+          <div class="row-2">
+            <div class="form-group">
+              <label>Gender *</label>
+              <select id="pGender" class="form-control">
+                <option value="">Select Gender</option>
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Date of Birth *</label><input type="date" id="pDob" class="form-control"/></div>
+          </div>
+          <div class="row-2">
+            <div class="form-group"><label>Phone Number *</label><input type="tel" id="pPhone" class="form-control"/></div>
+            <div class="form-group"><label>Nationality</label><input type="text" id="pNationality" class="form-control" value="Nigerian"/></div>
+          </div>
+          <div class="row-2">
+            <div class="form-group">
+              <label>State of Origin</label>
+              <select id="pState" class="form-control">
+                <option value="">Select State</option>
+                <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option>
+                <option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option>
+                <option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option>
+                <option>Ekiti</option><option>Enugu</option><option>FCT</option><option>Gombe</option>
+                <option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option>
+                <option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option>
+                <option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option>
+                <option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option>
+                <option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option>
+                <option>Zamfara</option>
+              </select>
+            </div>
+            <div class="form-group"><label>LGA</label><input type="text" id="pLga" class="form-control" placeholder="Local Government Area"/></div>
+          </div>
+          <div class="form-group"><label>Permanent Address</label><textarea id="pAddress" class="form-control" rows="3" placeholder="Enter your home address"></textarea></div>
+          <button class="btn-action" onclick="savePersonal()">Save Personal Information</button>
+        </div>
+
+        <!-- PROGRAMME CHOICE -->
+        <div id="sec-programme" class="section">
+          <h4 style="color:#1a3a6b;margin-bottom:20px">Programme Choice</h4>
+          <div id="progMsg" class="msg"></div>
+          <div class="form-group">
+            <label>Degree Type *</label>
+            <select id="degreeType" class="form-control" onchange="filterProgrammes()">
+              <option value="">Select Degree Type</option>
+              <option value="PhD">Doctor of Philosophy (PhD)</option>
+              <option value="MPhil">Master of Philosophy (MPhil)</option>
+              <option value="Masters">Masters Degree (MSc/MA/MEd/MBA/LLM/MPH)</option>
+              <option value="PGDiploma">Postgraduate Diploma (PGD)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Faculty *</label>
+            <select id="faculty" class="form-control" onchange="filterDepartments()">
+              <option value="">Select Faculty</option>
+              <option>Faculty of Agriculture</option>
+              <option>Faculty of Arts and Islamic Studies</option>
+              <option>Faculty of Education</option>
+              <option>Faculty of Law</option>
+              <option>Faculty of Management Sciences</option>
+              <option>Faculty of Medicine and Allied Health Sciences</option>
+              <option>Faculty of Pharmaceutical Sciences</option>
+              <option>Faculty of Physical Sciences</option>
+              <option>Faculty of Science</option>
+              <option>Faculty of Social Sciences</option>
+              <option>Faculty of Veterinary Medicine</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Department *</label>
+            <input type="text" id="department" class="form-control" placeholder="Enter your department"/>
+          </div>
+          <div class="form-group">
+            <label>Programme / Course Title *</label>
+            <input type="text" id="programme" class="form-control" placeholder="e.g. M.Sc. Computer Science"/>
+          </div>
+          <div class="form-group">
+            <label>Session</label>
+            <input type="text" id="session" class="form-control" value="2026/2027" readonly/>
+          </div>
+          <button class="btn-action" onclick="saveProgramme()">Save Programme Choice</button>
+        </div>
+
+        <!-- QUALIFICATIONS -->
+        <div id="sec-qualifications" class="section">
+          <h4 style="color:#1a3a6b;margin-bottom:20px">Academic Qualifications</h4>
+          <div id="qualMsg" class="msg"></div>
+
+          <h5 style="color:#333;margin-bottom:12px">University Degree(s)</h5>
+          <div id="qualList"></div>
+          <button class="btn-action orange" onclick="addQual()" style="margin-bottom:20px">+ Add Qualification</button>
+
+          <hr/>
+          <h5 style="color:#333;margin:16px 0 12px">O'Level Results (WAEC/NECO/GCE)</h5>
+          <div id="oLevelList"></div>
+          <button class="btn-action orange" onclick="addOLevel()">+ Add O'Level Subject</button>
+
+          <div style="margin-top:20px">
+            <button class="btn-action" onclick="saveQualifications()">Save Qualifications</button>
+          </div>
+        </div>
+
+        <!-- DOCUMENTS -->
+        <div id="sec-documents" class="section">
+          <h4 style="color:#1a3a6b;margin-bottom:20px">Upload Documents</h4>
+          <div id="docMsg" class="msg"></div>
+          <p style="font-size:13px;color:#666;margin-bottom:20px">Upload clear scanned copies. Accepted formats: PDF, JPG, PNG. Max size: 5MB each.</p>
+
+          <div id="docList">
+            <div class="upload-box" onclick="triggerUpload('transcript')">
+              <input type="file" id="file-transcript" accept=".pdf,.jpg,.jpeg,.png" onchange="uploadDoc('transcript', this)"/>
+              <div style="font-size:24px">📄</div>
+              <div style="font-weight:600;margin-top:8px">Academic Transcript</div>
+              <div style="font-size:12px;color:#888">Click to upload</div>
+              <div id="status-transcript" style="font-size:12px;margin-top:6px;color:#0c8a52"></div>
+            </div>
+            <div class="upload-box" onclick="triggerUpload('certificate')">
+              <input type="file" id="file-certificate" accept=".pdf,.jpg,.jpeg,.png" onchange="uploadDoc('certificate', this)"/>
+              <div style="font-size:24px">🎓</div>
+              <div style="font-weight:600;margin-top:8px">Degree Certificate</div>
+              <div style="font-size:12px;color:#888">Click to upload</div>
+              <div id="status-certificate" style="font-size:12px;margin-top:6px;color:#0c8a52"></div>
+            </div>
+            <div class="upload-box" onclick="triggerUpload('oLevelResult')">
+              <input type="file" id="file-oLevelResult" accept=".pdf,.jpg,.jpeg,.png" onchange="uploadDoc('oLevelResult', this)"/>
+              <div style="font-size:24px">📋</div>
+              <div style="font-weight:600;margin-top:8px">O'Level Result</div>
+              <div style="font-size:12px;color:#888">Click to upload</div>
+              <div id="status-oLevelResult" style="font-size:12px;margin-top:6px;color:#0c8a52"></div>
+            </div>
+            <div class="upload-box" onclick="triggerUpload('passport')">
+              <input type="file" id="file-passport" accept=".pdf,.jpg,.jpeg,.png" onchange="uploadDoc('passport', this)"/>
+              <div style="font-size:24px">🖼️</div>
+              <div style="font-weight:600;margin-top:8px">Passport Photograph</div>
+              <div style="font-size:12px;color:#888">Click to upload (white background)</div>
+              <div id="status-passport" style="font-size:12px;margin-top:6px;color:#0c8a52"></div>
+            </div>
+            <div class="upload-box" onclick="triggerUpload('birthCert')">
+              <input type="file" id="file-birthCert" accept=".pdf,.jpg,.jpeg,.png" onchange="uploadDoc('birthCert', this)"/>
+              <div style="font-size:24px">📑</div>
+              <div style="font-weight:600;margin-top:8px">Birth Certificate / Declaration of Age</div>
+              <div style="font-size:12px;color:#888">Click to upload</div>
+              <div id="status-birthCert" style="font-size:12px;margin-top:6px;color:#0c8a52"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAYMENT -->
+        <div id="sec-payment" class="section">
+          <h4 style="color:#1a3a6b;margin-bottom:20px">Application Fee Payment</h4>
+          <div id="payMsg" class="msg"></div>
+          <div style="background:#f8f9fa;border-radius:8px;padding:24px;margin-bottom:20px">
+            <div style="font-size:13px;color:#666;margin-bottom:6px">APPLICATION FEE</div>
+            <div style="font-size:36px;font-weight:700;color:#1a3a6b">₦15,000.00</div>
+            <div style="font-size:13px;color:#888;margin-top:4px">Non-refundable. One-time payment per session.</div>
+          </div>
+          <div id="paymentPaidMsg" style="display:none;background:#d4edda;border-radius:8px;padding:16px;margin-bottom:16px">
+            <div style="font-weight:700;color:#155724">✅ Payment Confirmed</div>
+            <div style="font-size:13px;color:#155724;margin-top:4px">Reference: <span id="payRef"></span></div>
+            <div style="font-size:13px;color:#155724">Date: <span id="payDate"></span></div>
+          </div>
+          <div id="paymentPendingSection">
+            <p style="font-size:14px;color:#333;margin-bottom:20px">
+              Click the button below to proceed to secure payment via Paystack. You will be redirected back after payment.
+            </p>
+            <button class="btn-action green" onclick="initPayment()" id="payBtn">Pay ₦15,000 Now</button>
+            <div style="margin-top:16px;font-size:12px;color:#888">
+              🔒 Secured by Paystack. We accept Debit Cards, Bank Transfer, and USSD.
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <div id="sec-submit" class="section">
+          <h4 style="color:#1a3a6b;margin-bottom:20px">Submit Application</h4>
+          <div id="submitMsg" class="msg"></div>
+          <div id="submitChecklist" style="margin-bottom:24px"></div>
+          <div style="background:#fff3cd;border-radius:8px;padding:16px;margin-bottom:20px;font-size:13px;color:#856404">
+            ⚠️ <strong>Important:</strong> Once submitted, you cannot edit your application. Please review all sections carefully before submitting.
+          </div>
+          <button class="btn-action green" id="submitBtn" onclick="submitApplication()">Submit Application</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Copyright &copy; 2026 All rights reserved - UDUS</div>
+
+<script>
+var API    = '/api';
+var token  = localStorage.getItem('pg_token');
+var student = JSON.parse(localStorage.getItem('pg_student') || 'null');
+
+if (!token || !student) window.location.href = '/login';
+
+// ── Load full student data ────────────────────────────────────────────────────
+function loadStudent() {
+  fetch(API + '/auth/me', { headers: { Authorization: 'Bearer ' + token } })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.success) { localStorage.clear(); window.location.href = '/login'; return; }
+    student = d.student;
+    localStorage.setItem('pg_student', JSON.stringify(student));
+    renderDashboard();
+  })
+  .catch(() => renderDashboard());
+}
+
+function renderDashboard() {
+  document.getElementById('studentName').textContent = student.firstName + ' ' + student.lastName;
+  document.getElementById('appNum').textContent      = student.applicationNumber || '—';
+  document.getElementById('ovSession').textContent   = student.session || '2026/2027';
+  document.getElementById('ovDegree').textContent    = student.degreeType || '—';
+  document.getElementById('ovProgramme').textContent = student.programme || '—';
+
+  var status = student.applicationStatus || 'incomplete';
+  var statusEl = document.getElementById('appStatus');
+  statusEl.textContent = status.replace(/_/g, ' ').toUpperCase();
+  statusEl.className = 'badge-status ' + status;
+
+  var card = document.getElementById('statusCard');
+  card.className = 'status-card ' + status;
+
+  var msgs = {
+    incomplete:       'Please complete all sections to proceed.',
+    awaiting_payment: 'Please pay the application fee to continue.',
+    submitted:        'Your application has been submitted and is under review.',
+    under_review:     'Your application is currently being reviewed by the admissions committee.',
+    admitted:         '🎉 Congratulations! You have been offered admission.',
+    rejected:         'Unfortunately, your application was not successful this session.',
+  };
+  document.getElementById('statusMsg').textContent = msgs[status] || '';
+
+  var paid = student.paymentStatus === 'paid';
+  document.getElementById('ovPayment').textContent  = paid ? '✅ Paid' : '❌ Pending';
+  document.getElementById('ovPayment').style.color  = paid ? '#28a745' : '#dc3545';
+
+  // Steps
+  var steps = [
+    !!(student.firstName && student.gender && student.dateOfBirth),
+    !!(student.programme && student.degreeType),
+    !!(student.qualifications && student.qualifications.length > 0),
+    !!(student.documents && Object.values(student.documents).some(Boolean)),
+    paid,
+    status === 'submitted' || status === 'under_review' || status === 'admitted',
+  ];
+  steps.forEach(function(done, i) {
+    var el = document.getElementById('step' + (i + 1));
+    if (el) el.className = 'step ' + (done ? 'done' : (i === steps.indexOf(false) ? 'active' : ''));
+  });
+
+  // Pre-fill personal info
+  if (student.firstName)     document.getElementById('pFirstName').value   = student.firstName;
+  if (student.lastName)      document.getElementById('pLastName').value    = student.lastName;
+  if (student.middleName)    document.getElementById('pMiddleName').value  = student.middleName;
+  if (student.gender)        document.getElementById('pGender').value      = student.gender;
+  if (student.dateOfBirth)   document.getElementById('pDob').value         = student.dateOfBirth.substring(0, 10);
+  if (student.phone)         document.getElementById('pPhone').value       = student.phone;
+  if (student.nationality)   document.getElementById('pNationality').value = student.nationality;
+  if (student.stateOfOrigin) document.getElementById('pState').value       = student.stateOfOrigin;
+  if (student.lga)           document.getElementById('pLga').value         = student.lga;
+  if (student.address)       document.getElementById('pAddress').value     = student.address;
+
+  // Pre-fill programme
+  if (student.degreeType)  document.getElementById('degreeType').value  = student.degreeType;
+  if (student.faculty)     document.getElementById('faculty').value     = student.faculty;
+  if (student.department)  document.getElementById('department').value  = student.department;
+  if (student.programme)   document.getElementById('programme').value   = student.programme;
+
+  // Payment section
+  if (paid) {
+    document.getElementById('paymentPaidMsg').style.display  = 'block';
+    document.getElementById('paymentPendingSection').style.display = 'none';
+    document.getElementById('payRef').textContent  = student.paymentRef || '—';
+    document.getElementById('payDate').textContent = student.paymentDate ? new Date(student.paymentDate).toLocaleDateString() : '—';
+  }
+
+  // Documents
+  if (student.documents) {
+    Object.entries(student.documents).forEach(function(e) {
+      if (e[1]) {
+        var el = document.getElementById('status-' + e[0]);
+        if (el) el.textContent = '✅ Uploaded';
+      }
+    });
+  }
+
+  // Submit checklist
+  renderChecklist(steps);
+
+  // Check payment query param
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('payment') === 'success') {
+    showSection('payment', document.querySelector('.nav-item:nth-child(6)'));
+    loadStudent();
+  }
+}
+
+function renderChecklist(steps) {
+  var labels = ['Personal Information', 'Programme Choice', 'Qualifications', 'Documents Upload', 'Application Fee Payment', 'Ready to Submit'];
+  var html = labels.map(function(l, i) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px">' +
+      '<span style="font-size:18px">' + (steps[i] ? '✅' : '⬜') + '</span>' +
+      '<span style="' + (steps[i] ? 'color:#28a745' : 'color:#333') + '">' + l + '</span>' +
+      '</div>';
+  }).join('');
+  document.getElementById('submitChecklist').innerHTML = html;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  document.getElementById('sec-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// ── Save Personal Info ────────────────────────────────────────────────────────
+function savePersonal() {
+  var data = {
+    firstName:     document.getElementById('pFirstName').value.trim(),
+    lastName:      document.getElementById('pLastName').value.trim(),
+    middleName:    document.getElementById('pMiddleName').value.trim(),
+    gender:        document.getElementById('pGender').value,
+    dateOfBirth:   document.getElementById('pDob').value,
+    phone:         document.getElementById('pPhone').value.trim(),
+    nationality:   document.getElementById('pNationality').value.trim(),
+    stateOfOrigin: document.getElementById('pState').value,
+    lga:           document.getElementById('pLga').value.trim(),
+    address:       document.getElementById('pAddress').value.trim(),
+  };
+  if (!data.firstName || !data.lastName || !data.gender || !data.dateOfBirth) {
+    return showMsg('personalMsg', 'Please fill all required fields.', 'error');
+  }
+  apiPut('/application/personal', data, 'personalMsg', 'Personal information saved.');
+}
+
+// ── Save Programme ────────────────────────────────────────────────────────────
+function saveProgramme() {
+  var data = {
+    degreeType:  document.getElementById('degreeType').value,
+    faculty:     document.getElementById('faculty').value,
+    department:  document.getElementById('department').value.trim(),
+    programme:   document.getElementById('programme').value.trim(),
+    session:     document.getElementById('session').value,
+  };
+  if (!data.degreeType || !data.programme || !data.department) {
+    return showMsg('progMsg', 'Please fill all required fields.', 'error');
+  }
+  apiPut('/application/programme', data, 'progMsg', 'Programme choice saved.');
+}
+
+// ── Qualifications ────────────────────────────────────────────────────────────
+var quals   = student.qualifications || [];
+var oLevels = student.oLevel || [];
+
+function addQual() {
+  quals.push({ degree: '', institution: '', graduationYear: '', cgpa: '', classification: '' });
+  renderQuals();
+}
+function removeQual(i) { quals.splice(i, 1); renderQuals(); }
+function renderQuals() {
+  document.getElementById('qualList').innerHTML = quals.map(function(q, i) {
+    return '<div style="background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:12px;position:relative">' +
+      '<button onclick="removeQual(' + i + ')" style="position:absolute;top:8px;right:8px;background:#dc3545;color:white;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px">Remove</button>' +
+      '<div class="row-2">' +
+      '<div class="form-group"><label>Degree</label><input class="form-control" value="' + (q.degree||'') + '" placeholder="e.g. B.Sc. Computer Science" onchange="quals[' + i + '].degree=this.value"/></div>' +
+      '<div class="form-group"><label>Institution</label><input class="form-control" value="' + (q.institution||'') + '" placeholder="University name" onchange="quals[' + i + '].institution=this.value"/></div>' +
+      '</div>' +
+      '<div class="row-3">' +
+      '<div class="form-group"><label>Year of Graduation</label><input type="number" class="form-control" value="' + (q.graduationYear||'') + '" placeholder="e.g. 2020" onchange="quals[' + i + '].graduationYear=this.value"/></div>' +
+      '<div class="form-group"><label>CGPA</label><input class="form-control" value="' + (q.cgpa||'') + '" placeholder="e.g. 4.50/5.00" onchange="quals[' + i + '].cgpa=this.value"/></div>' +
+      '<div class="form-group"><label>Class</label><select class="form-control" onchange="quals[' + i + '].classification=this.value"><option>First Class</option><option>Second Class Upper</option><option>Second Class Lower</option><option>Third Class</option><option>Pass</option></select></div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function addOLevel() {
+  oLevels.push({ subject: '', grade: '', year: '', examType: 'WAEC' });
+  renderOLevels();
+}
+function removeOLevel(i) { oLevels.splice(i, 1); renderOLevels(); }
+function renderOLevels() {
+  document.getElementById('oLevelList').innerHTML = oLevels.map(function(o, i) {
+    return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px">' +
+      '<div><input class="form-control" value="' + (o.subject||'') + '" placeholder="Subject" onchange="oLevels[' + i + '].subject=this.value"/></div>' +
+      '<div><input class="form-control" value="' + (o.grade||'') + '" placeholder="Grade (A1-F9)" onchange="oLevels[' + i + '].grade=this.value"/></div>' +
+      '<div><input type="number" class="form-control" value="' + (o.year||'') + '" placeholder="Year" onchange="oLevels[' + i + '].year=this.value"/></div>' +
+      '<div><select class="form-control" onchange="oLevels[' + i + '].examType=this.value"><option>WAEC</option><option>NECO</option><option>GCE</option><option>NABTEB</option></select></div>' +
+      '<button onclick="removeOLevel(' + i + ')" style="background:#dc3545;color:white;border:none;border-radius:4px;padding:8px 10px;cursor:pointer">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+function saveQualifications() {
+  apiPut('/application/qualifications', { qualifications: quals, oLevel: oLevels }, 'qualMsg', 'Qualifications saved.');
+}
+
+// ── Document Upload ───────────────────────────────────────────────────────────
+function triggerUpload(docType) {
+  document.getElementById('file-' + docType).click();
+}
+function uploadDoc(docType, input) {
+  if (!input.files[0]) return;
+  var statusEl = document.getElementById('status-' + docType);
+  statusEl.textContent = 'Uploading...';
+  var fd = new FormData();
+  fd.append('file', input.files[0]);
+  fetch(API + '/application/upload/' + docType, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token },
+    body: fd,
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) { statusEl.textContent = '✅ Uploaded successfully'; statusEl.style.color = '#28a745'; }
+    else { statusEl.textContent = '❌ ' + (d.message || 'Upload failed'); statusEl.style.color = '#dc3545'; }
+  })
+  .catch(() => { statusEl.textContent = '❌ Upload error'; statusEl.style.color = '#dc3545'; });
+}
+
+// ── Payment ───────────────────────────────────────────────────────────────────
+function initPayment() {
+  var btn = document.getElementById('payBtn');
+  btn.disabled = true; btn.textContent = 'Initializing payment...';
+  fetch(API + '/payment/initialize', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false; btn.textContent = 'Pay ₦15,000 Now';
+    if (d.success) {
+      if (d.devMode) {
+        showMsg('payMsg', d.message, 'success');
+        loadStudent();
+      } else if (d.authorizationUrl) {
+        window.location.href = d.authorizationUrl;
+      }
+    } else {
+      showMsg('payMsg', d.message || 'Payment initialization failed.', 'error');
+    }
+  })
+  .catch(() => { btn.disabled = false; btn.textContent = 'Pay ₦15,000 Now'; showMsg('payMsg', 'Connection error.', 'error'); });
+}
+
+// ── Submit Application ────────────────────────────────────────────────────────
+function submitApplication() {
+  if (!confirm('Are you sure you want to submit your application? This action cannot be undone.')) return;
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  fetch(API + '/application/submit', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false; btn.textContent = 'Submit Application';
+    if (d.success) {
+      showMsg('submitMsg', '✅ Application submitted successfully! Check your email for confirmation.', 'success');
+      setTimeout(loadStudent, 1000);
+    } else {
+      showMsg('submitMsg', d.message || 'Submission failed.', 'error');
+    }
+  })
+  .catch(() => { btn.disabled = false; btn.textContent = 'Submit Application'; showMsg('submitMsg', 'Connection error.', 'error'); });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function apiPut(endpoint, data, msgId, successMsg) {
+  fetch(API + endpoint, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      student = d.student;
+      localStorage.setItem('pg_student', JSON.stringify(student));
+      showMsg(msgId, successMsg, 'success');
+      renderDashboard();
+    } else {
+      showMsg(msgId, d.message || 'An error occurred.', 'error');
+    }
+  })
+  .catch(() => showMsg(msgId, 'Connection error. Try again.', 'error'));
+}
+
+function showMsg(id, msg, type) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg; el.className = 'msg ' + type;
+  setTimeout(function() { if (el.textContent === msg) el.style.display = 'none'; }, 5000);
+}
+
+function doLogout() {
+  localStorage.clear();
+  window.location.href = '/login';
+}
+
+// Init
+renderQuals();
+renderOLevels();
+loadStudent();
+</script>
+</body>
+</html>
